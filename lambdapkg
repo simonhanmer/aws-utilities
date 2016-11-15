@@ -32,12 +32,26 @@ then
     rm $zipfile
 fi
 
-zip -9 ${zipfile} ${file} 
+echo "Adding ${file} to package"
+zip -9q ${zipfile} ${file} 
+if [ $? -ne 0 ]
+then
+    echo "Initial package build failed" >&2
+    exit 1
+fi
 
 for pkg in $(grep "import" $1 | awk '{print $2}'| egrep -v 'boto3|pprint|json|^re$|__future__')
 do
     cd lib/python2.7/site-packages
-    echo $pkg
-    zip -r9 ../../../${zipfile} ${pkg}
+    echo "Added ${pkg} library to package"
+    zip -rq9 ../../../${zipfile} ${pkg}
+    if [ $? -ne 0 ]
+    then
+        echo "Adding library ${pkg} failed" >&2
+        exit 2
+    fi
+    
     cd ../../..
 done
+
+echo "Package now in place at ${zipfile}"
