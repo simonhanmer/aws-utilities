@@ -1,0 +1,43 @@
+#!/bin/sh
+
+# -----------------------------------------------------------------------------
+# script to build AWS Lambda packages in a virtualenv environment - assumes $1
+# contains the name of a python file and we're running from the directory 
+# containing the file.
+#
+# We need to be running in virtualenv - i.e. we've done a source bin/activate
+# at some point.
+#
+# -----------------------------------------------------------------------------
+
+file=$1
+
+if [ ! -f $file ]
+then
+    echo "Missing file: ${file}" >&2
+    exit 1
+fi
+
+if [ -z "${VIRTUAL_ENV}" ] || [ ! -d lib/python2.7/site-packages ]
+then
+    echo "Can't find the package libraries"
+    exit 2
+fi
+
+zipfile=$(echo $file | sed "s/py$/zip/g")
+
+# If zip file already exists, delete it
+if [ -f $zipfile ]
+then
+    rm $zipfile
+fi
+
+zip -9 ${zipfile} ${file} 
+
+for pkg in $(grep "import" $1 | awk '{print $2}'| egrep -v 'boto3|pprint|json|^re$|__future__')
+do
+    cd lib/python2.7/site-packages
+    echo $pkg
+    zip -r9 ../../../${zipfile} ${pkg}
+    cd ../../..
+done
