@@ -40,7 +40,7 @@ then
     exit 1
 fi
 
-for pkg in $(grep "import" $1 | awk '{print $2}'| egrep -v 'boto3|pprint|json|^re$|datetime|random|__future__')
+for pkg in $(grep "import" $1 | awk '{print $2}'| egrep -v 'boto3|pprint|json|^re$|datetime|random|__future__|os')
 do
     # Is it a file in the current directory ?
     if [ -f ${pkg} ]
