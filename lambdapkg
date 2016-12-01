@@ -40,15 +40,26 @@ then
     exit 1
 fi
 
-for pkg in $(grep "import" $1 | awk '{print $2}'| egrep -v 'boto3|pprint|json|^re$|__future__')
+for pkg in $(grep "import" $1 | awk '{print $2}'| egrep -v 'boto3|pprint|json|^re$|datetime|random|__future__')
 do
-    cd lib/python2.7/site-packages
-    echo "Added ${pkg} library to package"
-    zip -rq9 ../../../${zipfile} ${pkg}
-    if [ $? -ne 0 ]
+    # Is it a file in the current directory ?
+    if [ -f ${pkg} ]
     then
-        echo "Adding library ${pkg} failed" >&2
-        exit 2
+        echo "Adding ${pkg} to package"
+        zip -q9 ${zipfile} ${pkg}
+    elif [ -f ${pkg}.py ]
+    then
+        echo "Adding ${pkg}.py to package"
+        zip -q9 ${zipfile} ${pkg}.py
+    else
+        cd lib/python2.7/site-packages
+        echo "Added ${pkg} library to package"
+        zip -rq9 ../../../${zipfile} ${pkg}
+        if [ $? -ne 0 ]
+        then
+            echo "Adding library ${pkg} failed" >&2
+            exit 2
+        fi
     fi
     
     cd ../../..
